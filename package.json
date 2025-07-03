@@ -1,0 +1,15 @@
+{
+    "name": "live-talent-exam",
+    "version": "1.0.0",
+    "description": "Online exam platform for Live Talent Exam with local file database",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "bcryptjs": "^2.4.3",
+        "jsonwebtoken": "^8.5.1",
+        "cors": "^2.8.5"
+    }
+}
