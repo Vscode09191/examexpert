@@ -1,0 +1,18 @@
+{
+    "users": [
+        {
+            "id": "1",
+            "email": "admin@example.com",
+            "password": "$2a$10$examplehashedpassword",
+            "isAdmin": true
+        }
+    ],
+    "questions": [
+        {
+            "id": 1,
+            "text": "If 2, 4, 6, 8 are the first four terms of a sequence, what would be the 10th term?",
+            "options": ["240", "380", "360", "300"],
+            "correctOption": 3
+        }
+    ]
+}
