@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #8e2de2, #4a00e0);
+      margin: 0;
+      padding: 20px;
+      color: #1e1e2f;
+    }
+    .container {
+      display: flex;
+      gap: 30px;
+      max-width: 1100px;
+      margin: auto;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      flex: 1;
+      min-width: 300px;
+    }
+    h2 {
+      font-size: 22px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+      color: #4a00e0;
+    }
+    .welcome-text {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .welcome-text strong {
+      font-weight: 600;
+      color: #4a00e0;
+    }
+    .exam {
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .exam:last-child {
+      border-bottom: none;
+    }
+    .exam-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .exam-info {
+      font-size: 14px;
+      color: #555;
+      margin: 5px 0 10px;
+    }
+    .btn {
+      padding: 8px 16px;
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background-color: #1a2533;
+    }
+    .results-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .results-table th, .results-table td {
+      padding: 12px;
+      border: 1px solid #eee;
+      text-align: left;
+    }
+    .results-table th {
+      background-color: #f0f5ff;
+    }
+    .performance-chart {
+      width: 100%;
+      height: 300px;
+      margin-top: 20px;
+    }
+    .timeline {
+      margin-top: 20px;
+    }
+    .event {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    .event-date {
+      width: 80px;
+      font-weight: bold;
+      color: #4a00e0;
+    }
+    .event-content {
+      flex: 1;
+      background: #f0f5ff;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .card {
+        min-width: 100%;
+      }
+      .results-table {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Student Dashboard</h2>
+      <p class="welcome-text">Welcome, <strong id="studentName">Student</strong></p>
+      <p class="welcome-text">You can view your upcoming exams, start them, and see your results from this dashboard.</p>
+      
+      <div class="performance-chart" id="performanceChart"></div>
+    </div>
+
+    <div class="card">
+      <h2>Available Exams</h2>
+      <div id="examsContainer"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Exam Results</h2>
+      <div id="resultsContainer"></div>
+      
+      <h3 style="margin-top: 20px;">Recent Activity</h3>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Load exams and results
+    async function loadDashboard() {
+      try {
+        // Set student name
+        document.getElementById("studentName").innerText = 
+          localStorage.getItem("name") || "Student";
+        
+        // Load exams
+        const examsRes = await fetch('/exams');
+        const exams = await examsRes.json();
+        // Show all exams for testing, not just active ones
+        renderExams(exams);
+        
+        // Load results
+        const username = localStorage.getItem('username');
+        const resultsRes = await fetch(`/results?studentId=${username}`);
+        const results = await resultsRes.json();
+        renderResults(results);
+        renderTimeline(results);
+        renderPerformanceChart(results);
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+      }
+    }
+    
+    // Render available exams
+    function renderExams(exams) {
+      const container = document.getElementById('examsContainer');
+      container.innerHTML = '';
+      
+      if (exams.length === 0) {
+        container.innerHTML = '<p>No exams available at the moment.</p>';
+        return;
+      }
+      
+      exams.forEach(exam => {
+        const examEl = document.createElement('div');
+        examEl.className = 'exam';
+        examEl.innerHTML = `
+          <div class="exam-title">${exam.title}</div>
+          <div class="exam-info">Duration: ${exam.duration} mins | Questions: ${exam.questionIds.length}</div>
+          <button class="btn" onclick="startExam('${exam.id}')">Start Exam</button>
+        `;
+        container.appendChild(examEl);
+      });
+    }
+    
+    // Render exam results
+    function renderResults(results) {
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '';
+      
+      if (results.length === 0) {
+        container.innerHTML = '<p>No results available yet.</p>';
+        return;
+      }
+      
+      const table = document.createElement('table');
+      table.className = 'results-table';
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Exam</th>
+            <th>Date</th>
+            <th>Score</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${results.map(result => `
+            <tr>
+              <td>${getExamName(result.examId)}</td>
+              <td>${new Date(result.date).toLocaleDateString()}</td>
+              <td>${result.score}%</td>
+              <td>Completed</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+      container.appendChild(table);
+    }
+    
+    // Render timeline
+    function renderTimeline(results) {
+      const container = document.getElementById('timeline');
+      container.innerHTML = '';
+      
+      results.slice(0, 5).forEach(result => {
+        const date = new Date(result.date);
+        const event = document.createElement('div');
+        event.className = 'event';
+        event.innerHTML = `
+          <div class="event-date">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+          <div class="event-content">${getExamName(result.examId)} - Scored ${result.score}%</div>
+        `;
+        container.appendChild(event);
+      });
+    }
+    
+    // Render performance chart
+    function renderPerformanceChart(results) {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      const examNames = results.map(r => getExamName(r.examId));
+      const scores = results.map(r => r.score);
+      
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: examNames,
+          datasets: [{
+            label: 'Exam Scores',
+            data: scores,
+            backgroundColor: '#4a00e0',
+            borderColor: '#4a00e0',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+    
+    // Get exam name by ID
+    async function getExamName(examId) {
+      try {
+        const res = await fetch('/exams');
+        const exams = await res.json();
+        const exam = exams.find(e => e.id === examId);
+        return exam ? exam.title : 'Unknown Exam';
+      } catch (error) {
+        return 'Unknown Exam';
+      }
+    }
+    
+    // Start exam
+    function startExam(examId) {
+      window.location.href = `exam.html?examId=${examId}`;
+    }
+    
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

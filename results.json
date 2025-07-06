@@ -1,0 +1,89 @@
+[
+  {
+    "studentId": "2025001",
+    "examId": "exam1",
+    "score": 85,
+    "date": "2023-06-15T10:30:00Z",
+    "answers": [
+      "Delhi",
+      "4"
+    ]
+  },
+  {
+    "studentId": "2025002",
+    "examId": "exam1",
+    "score": 50,
+    "date": "2023-06-16T11:15:00Z",
+    "answers": [
+      "Mumbai",
+      "4"
+    ]
+  },
+  {
+    "studentId": "2025001",
+    "examId": "exam2",
+    "score": null,
+    "date": "2025-07-06T11:29:58.148Z"
+  },
+  {
+    "studentId": "2025001",
+    "examId": "exam2",
+    "score": null,
+    "date": "2025-07-06T11:30:03.947Z"
+  },
+  {
+    "studentId": "2025001",
+    "examId": "exam1",
+    "score": null,
+    "date": "2025-07-06T11:30:07.734Z"
+  },
+  {
+    "studentId": "2025001",
+    "examId": "exam3",
+    "score": 0,
+    "date": "2025-07-06T11:46:28.682Z",
+    "answers": []
+  },
+  {
+    "studentId": "2025001",
+    "examId": "exam3",
+    "score": 0,
+    "date": "2025-07-06T11:46:36.049Z",
+    "answers": []
+  },
+  {
+    "studentId": "2025001",
+    "examId": "exam130523",
+    "score": 67,
+    "date": "2025-07-06T16:59:13.643Z",
+    "answers": [
+      "Mumbai",
+      "4",
+      "Mars"
+    ],
+    "timeSpent": 7,
+    "detailedResults": [
+      {
+        "questionId": 1,
+        "question": "What is the capital of India?",
+        "userAnswer": "Mumbai",
+        "correctAnswer": "Delhi",
+        "isCorrect": false
+      },
+      {
+        "questionId": 2,
+        "question": "2 + 2 = ?",
+        "userAnswer": "4",
+        "correctAnswer": "4",
+        "isCorrect": true
+      },
+      {
+        "questionId": 3,
+        "question": "Which planet is known as the Red Planet?",
+        "userAnswer": "Mars",
+        "correctAnswer": "Mars",
+        "isCorrect": true
+      }
+    ]
+  }
+]

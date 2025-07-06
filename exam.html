@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Exam</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .exam-title {
+      font-size: 24px;
+      color: #4a00e0;
+      margin: 0;
+    }
+    .timer {
+      background: #ffebee;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: #d32f2f;
+    }
+    .question-container {
+      margin-bottom: 30px;
+    }
+    .question {
+      font-size: 18px;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+    .options {
+      margin-left: 20px;
+    }
+    .option {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .option:hover {
+      background: #f0f0f0;
+    }
+    .option.selected {
+      background: #e3f2fd;
+      border-color: #2196f3;
+    }
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: #4a00e0;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .btn:hover:not(:disabled) {
+      background: #3a00b3;
+    }
+    .question-number {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .progress-bar {
+      height: 5px;
+      background: #e0e0e0;
+      margin-bottom: 20px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress {
+      height: 100%;
+      background: #4a00e0;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="exam-title" id="examTitle">Exam Title</h1>
+      <div class="timer" id="timer">00:00:00</div>
+    </div>
+    
+    <div class="progress-bar">
+      <div class="progress" id="progressBar"></div>
+    </div>
+    
+    <div id="examContent">
+      <!-- Questions will be loaded here -->
+    </div>
+    
+    <div class="navigation">
+      <button class="btn" id="prevBtn" disabled>Previous</button>
+      <div>
+        <span id="questionCounter">Question 1 of 10</span>
+      </div>
+      <button class="btn" id="nextBtn">Next</button>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+      <button class="btn" id="submitBtn" style="background: #d32f2f; display: none;">Submit Exam</button>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let currentQuestion = 0;
+    let examData = null;
+    let questions = [];
+    let userAnswers = [];
+    let timeLeft = 0;
+    let timerInterval = null;
+    let examStartTime = null;
+
+    // DOM elements
+    const examTitle = document.getElementById('examTitle');
+    const timerElement = document.getElementById('timer');
+    const examContent = document.getElementById('examContent');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const questionCounter = document.getElementById('questionCounter');
+    const progressBar = document.getElementById('progressBar');
+
+    // Initialize the exam
+    async function initExam() {
+      try {
+        // Get exam ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const examId = urlParams.get('examId');
+        
+        if (!examId) {
+          alert('No exam ID provided. Please go back to the dashboard and try again.');
+          return;
+        }
+
+        // Fetch exam details
+        const examRes = await fetch(`/exam/${examId}`);
+        if (!examRes.ok) throw new Error('Failed to load exam');
+        examData = await examRes.json();
+        
+        if (!examData || !examData.id) {
+          throw new Error('Invalid exam data received');
+        }
+        
+        // Set exam title
+        examTitle.textContent = examData.title;
+        
+        // Calculate time left in seconds (duration in minutes * 60)
+        timeLeft = parseInt(examData.duration) * 60;
+        
+        // Start the timer
+        startTimer();
+        
+        // Record exam start time
+        examStartTime = new Date();
+        
+        // Fetch questions for this exam
+        const questionsRes = await fetch(`/exam/${examId}/questions`);
+        if (!questionsRes.ok) {
+          const errorText = await questionsRes.text();
+          console.error('Failed to load questions:', errorText);
+          throw new Error(`Failed to load questions: ${questionsRes.status} ${questionsRes.statusText}`);
+        }
+        const questionsData = await questionsRes.json();
+        console.log('Questions data received:', questionsData);
+        questions = questionsData.questions || [];
+        
+        if (questions.length === 0) {
+          throw new Error('No questions found for this exam');
+        }
+        
+        // Initialize user answers array
+        userAnswers = new Array(questions.length).fill(null);
+        
+        // Display first question
+        showQuestion(0);
+        
+        // Set up event listeners
+        prevBtn.addEventListener('click', () => navigate(-1));
+        nextBtn.addEventListener('click', () => navigate(1));
+        submitBtn.addEventListener('click', submitExam);
+        
+      } catch (error) {
+        console.error('Error initializing exam:', error);
+        alert('Failed to load exam. Please try again later.');
+      }
+    }
+
+    // Start the exam timer
+    function startTimer() {
+      updateTimerDisplay();
+      
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          submitExam();
+        }
+      }, 1000);
+    }
+
+    // Update the timer display
+    function updateTimerDisplay() {
+      const hours = Math.floor(timeLeft / 3600);
+      const minutes = Math.floor((timeLeft % 3600) / 60);
+      const seconds = timeLeft % 60;
+      
+      timerElement.textContent = 
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      // Change color when time is running low
+      if (timeLeft <= 300) { // 5 minutes or less
+        timerElement.style.color = '#ff5722';
+      }
+      if (timeLeft <= 60) { // 1 minute or less
+        timerElement.style.color = '#f44336';
+      }
+    }
+
+    // Show a specific question
+    function showQuestion(index) {
+      if (index < 0 || index >= questions.length) return;
+      
+      currentQuestion = index;
+      const question = questions[index];
+      
+      // Update question counter
+      questionCounter.textContent = `Question ${index + 1} of ${questions.length}`;
+      
+      // Update progress bar
+      progressBar.style.width = `${((index + 1) / questions.length) * 100}%`;
+      
+      // Generate question HTML
+      let optionsHtml = question.options.map((option, i) => {
+        const isSelected = userAnswers[index] === i;
+        return `
+          <div class="option ${isSelected ? 'selected' : ''}" data-index="${i}">
+            ${String.fromCharCode(65 + i)}. ${option}
+          </div>
+        `;
+      }).join('');
+      
+      examContent.innerHTML = `
+        <div class="question-container">
+          <div class="question">${question.question}</div>
+          <div class="options">${optionsHtml}</div>
+        </div>
+      `;
+      
+      // Add click event listeners to options
+      document.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', () => selectOption(option));
+      });
+      
+      // Update navigation buttons
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === questions.length - 1;
+      
+      // Show submit button on last question
+      submitBtn.style.display = index === questions.length - 1 ? 'inline-block' : 'none';
+    }
+
+    // Handle option selection
+    function selectOption(optionElement) {
+      // Remove selected class from all options
+      document.querySelectorAll('.option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      
+      // Add selected class to clicked option
+      optionElement.classList.add('selected');
+      
+      // Save the selected answer (0-based index)
+      const selectedIndex = parseInt(optionElement.getAttribute('data-index'));
+      userAnswers[currentQuestion] = selectedIndex;
+    }
+
+    // Navigate between questions
+    function navigate(direction) {
+      const newIndex = currentQuestion + direction;
+      if (newIndex >= 0 && newIndex < questions.length) {
+        showQuestion(newIndex);
+      }
+    }
+
+    // Submit the exam
+    async function submitExam() {
+      if (confirm('Are you sure you want to submit your exam? You cannot change your answers after submission.')) {
+        clearInterval(timerInterval);
+        
+        try {
+          const username = localStorage.getItem('username');
+          const endTime = new Date();
+          const timeSpent = Math.floor((endTime - examStartTime) / 1000); // in seconds
+          
+          // Format answers array with selected options
+          const formattedAnswers = userAnswers.map((answerIndex, i) => {
+            return answerIndex !== null ? questions[i].options[answerIndex] : null;
+          });
+          
+          // Prepare the submission data according to server expectations
+          const submissionData = {
+            examId: examData.id,
+            username: username,
+            answers: formattedAnswers,
+            timeSpent: timeSpent
+          };
+          
+          console.log('Submitting exam data:', submissionData);
+          
+          try {
+            // Submit to the correct endpoint with full URL to avoid CORS issues
+            const response = await fetch('http://localhost:3000/submit', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify(submissionData)
+            });
+            
+            console.log('Response status:', response.status, response.statusText);
+            
+            let result;
+            try {
+              result = await response.json();
+              console.log('Submission response:', result);
+            } catch (jsonError) {
+              console.error('Error parsing JSON response:', jsonError);
+              const text = await response.text();
+              console.error('Raw response:', text);
+              throw new Error(`Invalid response from server: ${text.substring(0, 200)}`);
+            }
+            
+            if (response.ok && result.success) {
+              // Redirect to results page with the result ID from server
+              window.location.href = `results.html?exam=${examData.id}&result=${result.id || 'completed'}`;
+              return;
+            } else {
+              throw new Error(result.message || `Server responded with status ${response.status}`);
+            }
+          } catch (fetchError) {
+            console.error('Fetch error:', fetchError);
+            throw new Error(`Network error: ${fetchError.message}`);
+          }
+          
+        } catch (error) {
+          console.error('Error submitting exam:', error);
+          alert('There was an error submitting your exam. Please try again.');
+        }
+      }
+    }
+
+    // Initialize the exam when the page loads
+    document.addEventListener('DOMContentLoaded', initExam);
+  </script>
+</body>
+</html>

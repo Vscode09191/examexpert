@@ -1,0 +1,47 @@
+[
+  {
+    "id": "exam414912",
+    "title": "ree",
+    "duration": 5,
+    "questionIds": [
+      1,
+      2,
+      3
+    ],
+    "active": true,
+    "startDate": "2025-07-06T22:50",
+    "endDate": "2025-07-13T22:50",
+    "description": "",
+    "createdAt": "2025-07-06T17:20:14.912Z"
+  },
+  {
+    "id": "exam427328",
+    "title": "ree",
+    "duration": 5,
+    "questionIds": [
+      1,
+      2,
+      3
+    ],
+    "active": true,
+    "startDate": "2025-07-06T22:50",
+    "endDate": "2025-07-13T22:50",
+    "description": "",
+    "createdAt": "2025-07-06T17:20:27.328Z"
+  },
+  {
+    "id": "exam475090",
+    "title": "rr",
+    "duration": 5,
+    "questionIds": [
+      1,
+      2,
+      3
+    ],
+    "active": true,
+    "startDate": "2025-07-06T22:51",
+    "endDate": "2025-07-13T22:51",
+    "description": "",
+    "createdAt": "2025-07-06T17:21:15.090Z"
+  }
+]

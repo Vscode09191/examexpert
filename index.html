@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f3f6fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-container h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+    .login-container p {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+    .login-box {
+      background: linear-gradient(to right, #ff512f, #dd2476);
+      padding: 15px;
+      border-radius: 8px 8px 0 0;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      text-align: left;
+    }
+    .login-form {
+      background: #fff;
+      padding: 25px;
+      border-radius: 0 0 8px 8px;
+      text-align: left;
+    }
+    .login-form input[type="text"],
+    .login-form input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .login-form label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .login-form label input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      color: white;
+      margin-bottom: 10px;
+      transition: opacity 0.3s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn-login {
+      background-color: #506cf0;
+    }
+    .btn-admin {
+      background-color: #444;
+    }
+    .icon {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .icon img {
+      width: 80px;
+    }
+    .role-selector {
+      display: flex;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .role-option {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      background: #f9f9f9;
+    }
+    .role-option.selected {
+      background: #506cf0;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>EXAM PORTAL LOGIN</h1>
+    <p>Enter your credentials to access the exam system</p>
+    
+    <div class="role-selector">
+      <div class="role-option selected" data-role="student">Student</div>
+      <div class="role-option" data-role="admin">Admin</div>
+    </div>
+    
+    <div class="login-box">Login</div>
+    <div class="login-form">
+      <div class="icon">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User Icon">
+      </div>
+      <form id="loginForm">
+        <input type="text" id="username" placeholder="Registration No." required>
+        <input type="password" id="password" placeholder="Password" required>
+        <label>
+          <input type="checkbox" onclick="togglePassword()"> Show Password
+        </label>
+        <button type="submit" class="btn btn-login">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let currentRole = 'student';
+    
+    // Set up role selection
+    document.querySelectorAll('.role-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        currentRole = option.dataset.role;
+      });
+    });
+    
+    // Toggle password visibility
+    function togglePassword() {
+      const pwd = document.getElementById("password");
+      pwd.type = pwd.type === "password" ? "text" : "password";
+    }
+
+    // Handle login
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, role: currentRole })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem("username", username);
+          localStorage.setItem("name", data.name);
+          localStorage.setItem("role", data.role);
+          
+          if (currentRole === 'student') {
+            window.location.href = "dashboard.html";
+          } else {
+            window.location.href = "admin.html";
+          }
+        } else {
+          alert("Invalid credentials. Please try again.");
+        }
+
+      } catch (err) {
+        alert("Server error: Unable to login");
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

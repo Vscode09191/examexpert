@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Results</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f6f8fb;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      color: #1a237e;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #666;
+      font-size: 16px;
+    }
+    
+    .result-summary {
+      background: linear-gradient(135deg, #1a237e, #283593);
+      color: white;
+      padding: 25px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .result-summary::before {
+      content: "";
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+    }
+    
+    .score {
+      font-size: 72px;
+      font-weight: 700;
+      margin: 10px 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .score-label {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: #f5f7fa;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+    
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #1a237e;
+      margin: 10px 0;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .chart-container {
+      margin: 30px 0;
+      height: 300px;
+    }
+    
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 40px;
+    }
+    
+    .btn {
+      padding: 12px 25px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #1a237e, #283593);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(41, 98, 255, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(41, 98, 255, 0.4);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: #1a237e;
+      border: 2px solid #1a237e;
+    }
+    
+    .btn-secondary:hover {
+      background: #f0f2f5;
+      transform: translateY(-3px);
+    }
+    
+    .feedback {
+      background: #e8f5e9;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 30px;
+      border-left: 4px solid #4caf50;
+    }
+    
+    .feedback.low {
+      background: #fff8e1;
+      border-left-color: #ffc107;
+    }
+    
+    .feedback h3 {
+      margin-top: 0;
+      color: #2e7d32;
+    }
+    
+    .feedback.low h3 {
+      color: #ff8f00;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .actions {
+        flex-direction: column;
+      }
+      
+      .score {
+        font-size: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Exam Results</h1>
+      <p id="examTitle">SSC CGL Tier I Mock Test</p>
+    </div>
+    
+    <div class="result-summary">
+      <div class="score-label">Your Score</div>
+      <div class="score" id="scoreDisplay">0%</div>
+      <p id="resultMessage">Congratulations on completing the exam!</p>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Correct Answers</div>
+        <div class="stat-value" id="correctCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Incorrect Answers</div>
+        <div class="stat-value" id="incorrectCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Time Taken</div>
+        <div class="stat-value" id="timeTaken">0</div>
+        <div class="stat-label">minutes</div>
+      </div>
+    </div>
+    
+    <div class="chart-container">
+      <canvas id="performanceChart"></canvas>
+    </div>
+    
+    <div class="feedback" id="feedbackContainer">
+      <h3>Performance Feedback</h3>
+      <p id="feedbackText">Great job on your exam! You've demonstrated a good understanding of the material.</p>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-primary" id="viewDetailedReport">
+        <i class="fas fa-chart-bar"></i> View Detailed Report
+      </button>
+      <button class="btn btn-secondary" id="backToDashboard">
+        <i class="fas fa-home"></i> Back to Dashboard
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const examId = urlParams.get('examId');
+      const studentId = urlParams.get('studentId');
+      
+      // If no parameters, try to get from localStorage (set during exam submission)
+      const storedResults = localStorage.getItem('examResults');
+      let results = null;
+      
+      if (storedResults) {
+        try {
+          results = JSON.parse(storedResults);
+          displayResults(results);
+        } catch (error) {
+          console.error('Error parsing stored results:', error);
+          fetchResultsFromServer();
+        }
+      } else if (examId && studentId) {
+        fetchResultsFromServer(examId, studentId);
+      } else {
+        showError('No exam results found');
+      }
+      
+      // Set up button event listeners
+      document.getElementById('viewDetailedReport').addEventListener('click', function() {
+        if (results) {
+          window.location.href = `report.html?student=${results.studentId}&exam=${results.examId}`;
+        } else if (examId && studentId) {
+          window.location.href = `report.html?student=${studentId}&exam=${examId}`;
+        } else {
+          alert('Cannot load detailed report: Missing exam information');
+        }
+      });
+      
+      document.getElementById('backToDashboard').addEventListener('click', function() {
+        window.location.href = 'dashboard.html';
+      });
+    });
+    
+    // Fetch results from server
+    async function fetchResultsFromServer(examId, studentId) {
+      try {
+        // Fetch the most recent result for this student and exam
+        const response = await fetch(`/results?studentId=${studentId}&examId=${examId}&sort=date&limit=1`);
+        const results = await response.json();
+        
+        if (results && results.length > 0) {
+          displayResults(results[0]);
+        } else {
+          showError('No results found for this exam');
+        }
+      } catch (error) {
+        console.error('Error fetching results:', error);
+        showError('Failed to load exam results');
+      }
+    }
+    
+    // Display results on the page
+    function displayResults(result) {
+      // Display score and counts
+      document.getElementById('scoreDisplay').textContent = `${result.score}%`;
+      
+      // Get exam details
+      fetchExamDetails(result.examId);
+      
+      // Calculate correct and incorrect based on score
+      if (result.detailedResults) {
+        const correct = result.detailedResults.filter(q => q.isCorrect).length;
+        const incorrect = result.detailedResults.filter(q => !q.isCorrect).length;
+        
+        document.getElementById('correctCount').textContent = correct;
+        document.getElementById('incorrectCount').textContent = incorrect;
+        
+        // Create chart
+        createPerformanceChart(correct, incorrect);
+      } else if (result.correct !== undefined && result.total !== undefined) {
+        // If we have correct and total from the submission response
+        document.getElementById('correctCount').textContent = result.correct;
+        document.getElementById('incorrectCount').textContent = result.total - result.correct;
+        
+        // Create chart
+        createPerformanceChart(result.correct, result.total - result.correct);
+      }
+      
+      // Display time taken
+      if (result.timeSpent) {
+        const minutes = Math.floor(result.timeSpent / 60);
+        document.getElementById('timeTaken').textContent = minutes;
+      } else {
+        document.getElementById('timeTaken').textContent = 'N/A';
+      }
+      
+      // Set feedback based on score
+      setFeedback(result.score);
+    }
+    
+    // Fetch exam details
+    async function fetchExamDetails(examId) {
+      try {
+        const response = await fetch(`/exam/${examId}`);
+        const exam = await response.json();
+        
+        if (exam) {
+          document.getElementById('examTitle').textContent = exam.title;
+        }
+      } catch (error) {
+        console.error('Error fetching exam details:', error);
+      }
+    }
+    
+    // Create performance chart
+    function createPerformanceChart(correct, incorrect) {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Correct', 'Incorrect'],
+          datasets: [{
+            data: [correct, incorrect],
+            backgroundColor: ['#4CAF50', '#F44336'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            title: {
+              display: true,
+              text: 'Performance Breakdown',
+              font: {
+                size: 16
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Set feedback based on score
+    function setFeedback(score) {
+      const feedbackContainer = document.getElementById('feedbackContainer');
+      const feedbackText = document.getElementById('feedbackText');
+      const resultMessage = document.getElementById('resultMessage');
+      
+      if (score >= 80) {
+        feedbackText.textContent = 'Excellent work! You've demonstrated a strong understanding of the material. Keep up the great work!';
+        resultMessage.textContent = 'Congratulations on your excellent performance!';
+      } else if (score >= 60) {
+        feedbackText.textContent = 'Good job! You've shown a solid grasp of most concepts. Review the questions you missed to strengthen your knowledge.';
+        resultMessage.textContent = 'Well done on completing the exam!';
+      } else if (score >= 40) {
+        feedbackContainer.className = 'feedback low';
+        feedbackText.textContent = 'You've passed the exam, but there's room for improvement. Focus on reviewing the topics where you missed questions.';
+        resultMessage.textContent = 'You've completed the exam.';
+      } else {
+        feedbackContainer.className = 'feedback low';
+        feedbackText.textContent = 'You need more practice with this material. Don't be discouraged - review the concepts thoroughly and try again.';
+        resultMessage.textContent = 'Thank you for completing the exam.';
+      }
+    }
+    
+    // Show error message
+    function showError(message) {
+      document.getElementById('scoreDisplay').textContent = 'N/A';
+      document.getElementById('resultMessage').textContent = message;
+      document.getElementById('correctCount').textContent = '-';
+      document.getElementById('incorrectCount').textContent = '-';
+      document.getElementById('timeTaken').textContent = '-';
+      
+      // Hide chart and feedback
+      document.querySelector('.chart-container').style.display = 'none';
+      document.getElementById('feedbackContainer').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
